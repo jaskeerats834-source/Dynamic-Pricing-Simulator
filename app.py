@@ -8,34 +8,45 @@ from streamlit_autorefresh import st_autorefresh
 
 st.set_page_config(page_title="Dynamic Pricing System", layout="wide")
 
-# ---------- BACKGROUND ----------
+# ---------- BACKGROUND + UI ----------
 def set_bg(url):
     st.markdown(f"""
     <style>
+
     .stApp {{
         background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)),
                     url("{url}");
         background-size: cover;
         background-attachment: fixed;
     }}
-    h1,h2,h3,h4,p,label,div {{
-        color:white !important;
+
+    /* Fade Animation */
+    @keyframes fadeIn {{
+        from {{ opacity: 0; transform: translateY(15px); }}
+        to {{ opacity: 1; transform: translateY(0); }}
+    }}
+
+    .block-container {{
+        animation: fadeIn 0.8s ease-in-out;
     }}
 
     /* Sidebar */
     [data-testid="stSidebar"] {{
-        background-color: rgba(0,0,0,0.85);
+        background-color: rgba(0,0,0,0.9);
     }}
 
     /* Buttons */
     .stButton>button {{
-        border-radius: 8px;
+        border-radius: 10px;
         background: linear-gradient(90deg, #3b82f6, #06b6d4);
         color: white;
         border: none;
+        transition: all 0.3s ease;
     }}
+
     .stButton>button:hover {{
-        transform: scale(1.05);
+        transform: scale(1.08);
+        box-shadow: 0px 0px 15px rgba(59,130,246,0.8);
     }}
 
     /* Cards */
@@ -43,7 +54,17 @@ def set_bg(url):
         background: rgba(0,0,0,0.6);
         padding: 20px;
         border-radius: 12px;
-        margin-bottom: 15px;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }}
+
+    .card:hover {{
+        transform: translateY(-8px);
+        box-shadow: 0px 10px 25px rgba(0,0,0,0.5);
+    }}
+
+    h1,h2,h3,p,label,div {{
+        color:white !important;
     }}
 
     </style>
@@ -64,7 +85,6 @@ if "username" not in st.session_state:
 
 # ---------- SIDEBAR ----------
 st.sidebar.markdown("## 🚀 Dynamic Pricing System")
-st.sidebar.markdown("### 👋 Welcome")
 st.sidebar.markdown("---")
 
 menu = st.sidebar.radio("Navigation", ["Login", "Home", "Dashboard", "About"])
@@ -101,11 +121,11 @@ elif menu == "Home":
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown("""
     <h1>📊 Dynamic Pricing System</h1>
-    <p>A real-time pricing system adjusting prices based on demand, stock, rating, and season.</p>
+    <p>This system adjusts product prices dynamically using demand, stock, rating, and season.</p>
 
     <h3>🚀 Features:</h3>
     <ul>
-    <li>Real-time updates</li>
+    <li>Real-time pricing</li>
     <li>Analytics dashboard</li>
     <li>Profit insights</li>
     <li>Recommendations</li>
@@ -122,6 +142,7 @@ elif menu == "Dashboard":
         st.stop()
 
     st.title("📊 Dashboard")
+    st.markdown("### ⚡ Real-time insights updating every 5 seconds...")
 
     if st.button("Logout"):
         st.session_state.logged_in = False
@@ -158,7 +179,7 @@ elif menu == "Dashboard":
         lambda x: "Increase" if x>80 else "Decrease" if x<40 else "Stable"
     )
 
-    # ---------- FILTERS ----------
+    # Filters
     st.sidebar.header("Filters")
     search = st.sidebar.text_input("Search")
     season = st.sidebar.selectbox("Season", ["All"] + list(df['Season'].unique()))
@@ -169,7 +190,7 @@ elif menu == "Dashboard":
     if season != "All":
         df = df[df['Season']==season]
 
-    # ---------- KPI ----------
+    # KPI
     st.markdown('<div class="card">', unsafe_allow_html=True)
     c1,c2,c3,c4 = st.columns(4)
     c1.metric("Products", len(df))
@@ -178,7 +199,7 @@ elif menu == "Dashboard":
     c4.metric("Profit", int(df['Profit'].mean()))
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # ---------- CHARTS ----------
+    # Charts
     st.markdown('<div class="card">', unsafe_allow_html=True)
 
     colA, colB = st.columns(2)
@@ -221,7 +242,7 @@ elif menu == "Dashboard":
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # ---------- RECOMMENDATIONS ----------
+    # Recommendations
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.subheader("📌 Recommendations")
     st.dataframe(df[['Product_Name','Dynamic_Price','Recommendation']], use_container_width=True)
@@ -232,54 +253,12 @@ elif menu == "About":
     set_bg("https://images.unsplash.com/photo-1498050108023-c5249f4df085")
 
     st.markdown('<div class="card">', unsafe_allow_html=True)
-
     st.markdown("""
     <h1>ℹ️ About This Project</h1>
 
-    <p>
-    This Dynamic Pricing System is designed to simulate modern retail pricing strategies.
-    It dynamically adjusts product prices in real-time based on factors such as demand,
-    stock availability, customer ratings, and seasonal trends.
-    </p>
+    <p>This Dynamic Pricing System simulates real-world pricing strategies.</p>
 
-    <h3>🎯 Objective</h3>
-    <p>
-    The main objective of this project is to demonstrate how businesses can use data analytics
-    and automation to optimize pricing decisions and maximize profitability.
-    </p>
-
-    <h3>🛠️ Technologies Used</h3>
-    <ul>
-        <li>Python</li>
-        <li>Pandas</li>
-        <li>Matplotlib & Seaborn</li>
-        <li>Streamlit</li>
-    </ul>
-
-    <h3>📊 Key Features</h3>
-    <ul>
-        <li>Real-time data simulation</li>
-        <li>Dynamic price calculation</li>
-        <li>Interactive dashboard with multiple charts</li>
-        <li>Filtering and analytics tools</li>
-        <li>Recommendation system</li>
-        <li>Multi-user login system</li>
-    </ul>
-
-    <hr>
-
-    <h2>👨‍💻 About the Developer</h2>
-
-    <p>
-    <b>Name:</b> Jaskeerat Singh<br>
-    <b>Course:</b> Bachelor of Computer Applications (BCA)<br>
-    <b>University:</b> Graphic Era Deemed to be University
-    </p>
-
-    <p>
-    This project was developed as part of academic coursework to explore practical
-    applications of data analytics, dynamic pricing strategies, and interactive dashboards.
-    </p>
+    <h3>👨‍💻 Developer</h3>
+    <p>Jaskeerat Singh<br>BCA - Graphic Era University</p>
     """, unsafe_allow_html=True)
-
     st.markdown('</div>', unsafe_allow_html=True)
