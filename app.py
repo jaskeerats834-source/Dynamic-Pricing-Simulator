@@ -264,7 +264,7 @@ with colF:
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ---------- ABOUT ----------
-elif menu = "About":
+elif menu == "About":
     set_bg("https://images.unsplash.com/photo-1498050108023-c5249f4df085")
 
     st.markdown('<div class="card">', unsafe_allow_html=True)
