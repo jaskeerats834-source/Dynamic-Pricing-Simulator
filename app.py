@@ -7,49 +7,71 @@ import datetime
 from streamlit_autorefresh import st_autorefresh
 
 # ------------------ PAGE CONFIG ------------------
-st.set_page_config(page_title="Dynamic Pricing Dashboard", layout="wide")
+st.set_page_config(page_title="Dynamic Pricing System", layout="wide")
 
-# ------------------ AUTO REFRESH ------------------
-st_autorefresh(interval=5000, limit=None, key="refresh")
+# ------------------ SESSION STATE ------------------
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
 
-# ------------------ CUSTOM STYLE ------------------
-st.markdown("""
-<style>
-.block-container {padding-top: 2rem;}
-[data-testid="stMetric"] {
-    background-color: #1e293b;
-    padding: 15px;
-    border-radius: 10px;
-    text-align: center;
-}
-</style>
-""", unsafe_allow_html=True)
+# ------------------ SIDEBAR NAVIGATION ------------------
+menu = st.sidebar.radio("Navigation", ["Login", "Home", "Dashboard", "About"])
 
-# ------------------ HEADER ------------------
-st.title("🚀 Dynamic Pricing Dashboard")
-st.caption("Real-Time Retail Decision Support System")
+# ------------------ LOGIN PAGE ------------------
+if menu == "Login":
+    st.title("🔐 Login Page")
 
-# ------------------ SIDEBAR ------------------
-st.sidebar.title("⚙️ Controls")
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
 
-# ------------------ FILE INPUT ------------------
-file = st.sidebar.file_uploader("Upload CSV", type=["csv"])
+    if st.button("Login"):
+        if username == "admin" and password == "1234":
+            st.session_state.logged_in = True
+            st.success("Login Successful ✅")
+        else:
+            st.error("Invalid Credentials ❌")
 
-# ------------------ LOAD DATA ------------------
-@st.cache_data
-def load_default():
-    return pd.read_csv("default_dataset.csv")
+# ------------------ HOME PAGE ------------------
+elif menu == "Home":
+    st.title("🏠 Dynamic Pricing System")
 
-if file is not None:
-    df = pd.read_csv(file)
-    st.success("Custom dataset loaded ✅")
-else:
-    df = load_default()
-    st.info("Using default dataset")
+    st.write("""
+    This system automatically adjusts product prices based on:
+    - Demand 📈  
+    - Stock 📦  
+    - Ratings ⭐  
+    - Season 🌦️  
 
-# ------------------ LOADING SPINNER ------------------
-with st.spinner("Processing data..."):
-    
+    🔥 Features:
+    - Real-time simulation
+    - Data analytics dashboard
+    - Profit calculation
+    - Smart recommendations
+    """)
+
+# ------------------ DASHBOARD ------------------
+elif menu == "Dashboard":
+
+    if not st.session_state.logged_in:
+        st.warning("Please login first 🔐")
+        st.stop()
+
+    st.title("📊 Dynamic Pricing Dashboard")
+
+    # AUTO REFRESH
+    st_autorefresh(interval=5000, limit=None, key="refresh")
+
+    # FILE UPLOAD
+    file = st.sidebar.file_uploader("Upload CSV", type=["csv"])
+
+    @st.cache_data
+    def load_default():
+        return pd.read_csv("default_dataset.csv")
+
+    if file:
+        df = pd.read_csv(file)
+    else:
+        df = load_default()
+
     # REAL-TIME SIMULATION
     df['Demand'] = df['Demand'].apply(lambda x: max(0, x + random.randint(-5, 5)))
     df['Stock'] = df['Stock'].apply(lambda x: max(0, x + random.randint(-10, 10)))
@@ -69,10 +91,9 @@ with st.spinner("Processing data..."):
 
     df['Dynamic_Price'] = df.apply(calc, axis=1)
 
-    # PROFIT
+    # EXTRA FEATURES
     df['Profit'] = df['Dynamic_Price'] - df['Base_Price']
 
-    # RECOMMENDATION
     def recommend(row):
         if row['Demand'] > 80 and row['Stock'] < 50:
             return "Increase Price"
@@ -83,110 +104,127 @@ with st.spinner("Processing data..."):
 
     df['Recommendation'] = df.apply(recommend, axis=1)
 
-# ------------------ FILTERS ------------------
-search = st.sidebar.text_input("Search Product")
-top_n = st.sidebar.slider("Top N", 5, 50, 10)
-season = st.sidebar.selectbox("Season", ["All"] + list(df['Season'].unique()))
+    # FILTERS
+    st.sidebar.header("Filters")
 
-price_range = st.sidebar.slider(
-    "Price Range",
-    int(df['Dynamic_Price'].min()),
-    int(df['Dynamic_Price'].max()),
-    (int(df['Dynamic_Price'].min()), int(df['Dynamic_Price'].max()))
-)
+    search = st.sidebar.text_input("Search Product")
+    top_n = st.sidebar.slider("Top N", 5, 50, 10)
+    season = st.sidebar.selectbox("Season", ["All"] + list(df['Season'].unique()))
 
-filtered = df.copy()
+    price_range = st.sidebar.slider(
+        "Price Range",
+        int(df['Dynamic_Price'].min()),
+        int(df['Dynamic_Price'].max()),
+        (int(df['Dynamic_Price'].min()), int(df['Dynamic_Price'].max()))
+    )
 
-if search:
-    filtered = filtered[filtered['Product_Name'].str.contains(search, case=False)]
+    filtered = df.copy()
 
-if season != "All":
-    filtered = filtered[filtered['Season'] == season]
+    if search:
+        filtered = filtered[filtered['Product_Name'].str.contains(search, case=False)]
 
-filtered = filtered[
-    (filtered['Dynamic_Price'] >= price_range[0]) &
-    (filtered['Dynamic_Price'] <= price_range[1])
-]
+    if season != "All":
+        filtered = filtered[filtered['Season'] == season]
 
-# ------------------ KPI ------------------
-st.subheader("📊 Key Metrics")
+    filtered = filtered[
+        (filtered['Dynamic_Price'] >= price_range[0]) &
+        (filtered['Dynamic_Price'] <= price_range[1])
+    ]
 
-col1, col2, col3, col4, col5 = st.columns(5)
+    # KPI
+    st.subheader("📊 Key Metrics")
 
-col1.metric("Products", len(filtered))
-col2.metric("Avg Base", f"₹{filtered['Base_Price'].mean():.0f}")
-col3.metric("Avg Dynamic", f"₹{filtered['Dynamic_Price'].mean():.0f}")
-col4.metric("Increase %",
-            f"{((filtered['Dynamic_Price'].mean()-filtered['Base_Price'].mean())/filtered['Base_Price'].mean()*100):.1f}%")
-col5.metric("Avg Profit", f"₹{filtered['Profit'].mean():.0f}")
+    col1, col2, col3, col4, col5 = st.columns(5)
 
-st.caption(f"🕒 Last Updated: {df['Last_Updated'].iloc[0]}")
+    col1.metric("Products", len(filtered))
+    col2.metric("Avg Base", f"₹{filtered['Base_Price'].mean():.0f}")
+    col3.metric("Avg Dynamic", f"₹{filtered['Dynamic_Price'].mean():.0f}")
+    col4.metric("Increase %",
+                f"{((filtered['Dynamic_Price'].mean()-filtered['Base_Price'].mean())/filtered['Base_Price'].mean()*100):.1f}%")
+    col5.metric("Avg Profit", f"₹{filtered['Profit'].mean():.0f}")
 
-st.markdown("---")
+    st.caption(f"Last Updated: {df['Last_Updated'].iloc[0]}")
 
-# ------------------ BEST PRODUCT ------------------
-best_product = filtered.loc[filtered['Dynamic_Price'].idxmax()]
-st.success(f"🔥 Best Product: {best_product['Product_Name']} (₹{best_product['Dynamic_Price']})")
+    st.markdown("---")
 
-# ------------------ CHARTS ------------------
-st.subheader("📈 Analytics")
+    # BEST PRODUCT
+    best = filtered.loc[filtered['Dynamic_Price'].idxmax()]
+    st.success(f"Best Product: {best['Product_Name']} (₹{best['Dynamic_Price']})")
 
-colA, colB = st.columns(2)
+    # CHARTS
+    colA, colB = st.columns(2)
 
-with colA:
-    top = filtered.sort_values(by="Dynamic_Price", ascending=False).head(top_n)
-    fig, ax = plt.subplots()
-    ax.bar(top['Product_Name'], top['Dynamic_Price'])
-    ax.tick_params(axis='x', rotation=45)
-    st.pyplot(fig)
+    with colA:
+        top = filtered.sort_values(by="Dynamic_Price", ascending=False).head(top_n)
+        fig, ax = plt.subplots()
+        ax.bar(top['Product_Name'], top['Dynamic_Price'])
+        ax.tick_params(axis='x', rotation=45)
+        st.pyplot(fig)
 
-with colB:
-    season_counts = filtered['Season'].value_counts()
-    fig, ax = plt.subplots()
-    ax.pie(season_counts, labels=season_counts.index, autopct='%1.1f%%')
-    st.pyplot(fig)
+    with colB:
+        season_counts = filtered['Season'].value_counts()
+        fig, ax = plt.subplots()
+        ax.pie(season_counts, labels=season_counts.index, autopct='%1.1f%%')
+        st.pyplot(fig)
 
-st.markdown("---")
+    st.markdown("---")
 
-colC, colD = st.columns(2)
+    colC, colD = st.columns(2)
 
-with colC:
-    fig, ax = plt.subplots()
-    ax.hist(filtered['Dynamic_Price'], bins=20)
-    st.pyplot(fig)
+    with colC:
+        fig, ax = plt.subplots()
+        ax.hist(filtered['Dynamic_Price'], bins=20)
+        st.pyplot(fig)
 
-with colD:
-    fig, ax = plt.subplots()
-    ax.scatter(filtered['Demand'], filtered['Dynamic_Price'])
-    st.pyplot(fig)
+    with colD:
+        fig, ax = plt.subplots()
+        ax.scatter(filtered['Demand'], filtered['Dynamic_Price'])
+        st.pyplot(fig)
 
-st.markdown("---")
+    st.markdown("---")
 
-colE, colF = st.columns(2)
+    colE, colF = st.columns(2)
 
-with colE:
-    trend = filtered['Dynamic_Price'].rolling(20).mean()
-    fig, ax = plt.subplots()
-    ax.plot(trend)
-    st.pyplot(fig)
+    with colE:
+        trend = filtered['Dynamic_Price'].rolling(20).mean()
+        fig, ax = plt.subplots()
+        ax.plot(trend)
+        st.pyplot(fig)
 
-with colF:
-    fig, ax = plt.subplots()
-    sns.heatmap(filtered[['Base_Price','Demand','Stock','Rating','Dynamic_Price']].corr(),
-                annot=True, ax=ax)
-    st.pyplot(fig)
+    with colF:
+        fig, ax = plt.subplots()
+        sns.heatmap(filtered[['Base_Price','Demand','Stock','Rating','Dynamic_Price']].corr(),
+                    annot=True, ax=ax)
+        st.pyplot(fig)
 
-st.markdown("---")
+    st.markdown("---")
 
-# ------------------ RECOMMENDATIONS ------------------
-st.subheader("📌 Recommendations")
-st.dataframe(filtered[['Product_Name','Dynamic_Price','Recommendation']])
+    # RECOMMENDATIONS
+    st.subheader("Recommendations")
+    st.dataframe(filtered[['Product_Name','Dynamic_Price','Recommendation']])
 
-# ------------------ DOWNLOAD ------------------
-csv = filtered.to_csv(index=False).encode('utf-8')
+    # DOWNLOAD
+    csv = filtered.to_csv(index=False).encode('utf-8')
+    st.download_button("Download Results", csv, "results.csv")
 
-st.download_button("📥 Download Results", csv, "results.csv")
+    # TABLE
+    st.subheader("Dataset")
+    st.dataframe(filtered)
 
-# ------------------ TABLE ------------------
-st.subheader("📂 Dataset")
-st.dataframe(filtered, use_container_width=True)
+# ------------------ ABOUT PAGE ------------------
+elif menu == "About":
+    st.title("ℹ️ About Project")
+
+    st.write("""
+    This is a Dynamic Pricing System developed using Python and Streamlit.
+
+    It simulates real-world pricing strategies used in e-commerce platforms.
+
+    Technologies Used:
+    - Python
+    - Pandas
+    - Matplotlib & Seaborn
+    - Streamlit
+
+    Developed for academic project purposes.
+    """)
