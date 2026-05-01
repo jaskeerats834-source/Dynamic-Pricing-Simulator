@@ -12,7 +12,6 @@ st.set_page_config(page_title="Dynamic Pricing System", layout="wide")
 def set_bg(url):
     st.markdown(f"""
     <style>
-
     .stApp {{
         background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)),
                     url("{url}");
@@ -20,7 +19,6 @@ def set_bg(url):
         background-attachment: fixed;
     }}
 
-    /* Fade Animation */
     @keyframes fadeIn {{
         from {{ opacity: 0; transform: translateY(15px); }}
         to {{ opacity: 1; transform: translateY(0); }}
@@ -30,18 +28,16 @@ def set_bg(url):
         animation: fadeIn 0.8s ease-in-out;
     }}
 
-    /* Sidebar */
     [data-testid="stSidebar"] {{
         background-color: rgba(0,0,0,0.9);
     }}
 
-    /* Buttons */
     .stButton>button {{
         border-radius: 10px;
         background: linear-gradient(90deg, #3b82f6, #06b6d4);
         color: white;
         border: none;
-        transition: all 0.3s ease;
+        transition: 0.3s;
     }}
 
     .stButton>button:hover {{
@@ -49,13 +45,12 @@ def set_bg(url):
         box-shadow: 0px 0px 15px rgba(59,130,246,0.8);
     }}
 
-    /* Cards */
     .card {{
         background: rgba(0,0,0,0.6);
         padding: 20px;
         border-radius: 12px;
         margin-bottom: 20px;
-        transition: all 0.3s ease;
+        transition: 0.3s;
     }}
 
     .card:hover {{
@@ -66,7 +61,6 @@ def set_bg(url):
     h1,h2,h3,p,label,div {{
         color:white !important;
     }}
-
     </style>
     """, unsafe_allow_html=True)
 
@@ -85,8 +79,6 @@ if "username" not in st.session_state:
 
 # ---------- SIDEBAR ----------
 st.sidebar.markdown("## 🚀 Dynamic Pricing System")
-st.sidebar.markdown("---")
-
 menu = st.sidebar.radio("Navigation", ["Login", "Home", "Dashboard", "About"])
 
 # ---------- LOGIN ----------
@@ -103,9 +95,7 @@ if menu == "Login":
         pwd = st.text_input("Password", type="password")
 
         if st.button("Login"):
-            user = user.strip()
-            pwd = pwd.strip()
-            if user in users and users[user] == pwd:
+            if user.strip() in users and users[user.strip()] == pwd.strip():
                 st.session_state.logged_in = True
                 st.session_state.username = user
                 st.success("Login successful")
@@ -119,18 +109,35 @@ elif menu == "Home":
     set_bg("https://images.unsplash.com/photo-1556740749-887f6717d7e4")
 
     st.markdown('<div class="card">', unsafe_allow_html=True)
+
     st.markdown("""
     <h1>📊 Dynamic Pricing System</h1>
-    <p>This system adjusts product prices dynamically using demand, stock, rating, and season.</p>
 
-    <h3>🚀 Features:</h3>
+    <p style="font-size:18px;">
+    This application simulates real-time dynamic pricing used in modern retail platforms.
+    Prices are adjusted based on demand, stock, ratings, and seasonal trends.
+    </p>
+
+    <h3>🚀 Key Features</h3>
     <ul>
-    <li>Real-time pricing</li>
-    <li>Analytics dashboard</li>
-    <li>Profit insights</li>
-    <li>Recommendations</li>
+        <li>Real-time price updates</li>
+        <li>Interactive dashboard</li>
+        <li>Profit analysis</li>
+        <li>Smart recommendations</li>
     </ul>
+
+    <h3>📈 How It Works</h3>
+    <ul>
+        <li>Dataset loaded</li>
+        <li>Demand & stock simulated</li>
+        <li>Pricing algorithm applied</li>
+        <li>Charts generated</li>
+    </ul>
+
+    <h3>🎯 Objective</h3>
+    <p>To demonstrate real-world data-driven pricing strategies.</p>
     """, unsafe_allow_html=True)
+
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ---------- DASHBOARD ----------
@@ -138,17 +145,14 @@ elif menu == "Dashboard":
     set_bg("https://images.unsplash.com/photo-1551288049-bebda4e38f71")
 
     if not st.session_state.logged_in:
-        st.warning("Please login first 🔐")
+        st.warning("Login first")
         st.stop()
 
     st.title("📊 Dashboard")
-    st.markdown("### ⚡ Real-time insights updating every 5 seconds...")
 
     if st.button("Logout"):
         st.session_state.logged_in = False
         st.rerun()
-
-    st.caption(f"User: {st.session_state.username}")
 
     st_autorefresh(interval=5000, key="refresh")
 
@@ -160,12 +164,10 @@ elif menu == "Dashboard":
 
     df = pd.read_csv(file) if file else load()
 
-    # Real-time simulation
     df['Demand'] += [random.randint(-5,5) for _ in range(len(df))]
     df['Stock'] += [random.randint(-10,10) for _ in range(len(df))]
     df['Last_Updated'] = datetime.datetime.now()
 
-    # Pricing
     def calc(r):
         price = r['Base_Price']
         if r['Demand'] > 80: price *= 1.2
@@ -180,7 +182,6 @@ elif menu == "Dashboard":
     )
 
     # Filters
-    st.sidebar.header("Filters")
     search = st.sidebar.text_input("Search")
     season = st.sidebar.selectbox("Season", ["All"] + list(df['Season'].unique()))
     top_n = st.sidebar.slider("Top N", 5, 50, 10)
@@ -206,46 +207,40 @@ elif menu == "Dashboard":
 
     with colA:
         top_products = df.sort_values(by="Dynamic_Price", ascending=False).head(top_n)
-        fig1, ax = plt.subplots()
+        fig, ax = plt.subplots()
         ax.bar(top_products['Product_Name'], top_products['Dynamic_Price'])
         plt.xticks(rotation=45)
-        st.pyplot(fig1)
+        st.pyplot(fig)
 
     with colB:
-        fig2, ax = plt.subplots()
+        fig, ax = plt.subplots()
         ax.pie(df['Season'].value_counts(), labels=df['Season'].value_counts().index, autopct='%1.1f%%')
-        st.pyplot(fig2)
+        st.pyplot(fig)
 
     colC, colD = st.columns(2)
 
     with colC:
-        fig3, ax = plt.subplots()
-        ax.hist(df['Dynamic_Price'], bins=20)
-        st.pyplot(fig3)
+        fig, ax = plt.subplots()
+        ax.hist(df['Dynamic_Price'])
+        st.pyplot(fig)
 
     with colD:
-        fig4, ax = plt.subplots()
+        fig, ax = plt.subplots()
         ax.scatter(df['Demand'], df['Dynamic_Price'])
-        st.pyplot(fig4)
-
-    colE, colF = st.columns(2)
-
-    with colE:
-        fig5, ax = plt.subplots()
-        ax.plot(df['Dynamic_Price'].rolling(10).mean())
-        st.pyplot(fig5)
-
-    with colF:
-        fig6, ax = plt.subplots()
-        sns.heatmap(df[['Base_Price','Demand','Stock','Dynamic_Price']].corr(), annot=True)
-        st.pyplot(fig6)
+        st.pyplot(fig)
 
     st.markdown('</div>', unsafe_allow_html=True)
 
     # Recommendations
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.subheader("📌 Recommendations")
-    st.dataframe(df[['Product_Name','Dynamic_Price','Recommendation']], use_container_width=True)
+    st.dataframe(df[['Product_Name','Dynamic_Price','Recommendation']])
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # FULL TABLE
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.subheader("📂 Complete Dataset View")
+    st.dataframe(df)
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ---------- ABOUT ----------
@@ -253,54 +248,11 @@ elif menu == "About":
     set_bg("https://images.unsplash.com/photo-1498050108023-c5249f4df085")
 
     st.markdown('<div class="card">', unsafe_allow_html=True)
-
     st.markdown("""
     <h1>ℹ️ About This Project</h1>
+    <p>This project demonstrates dynamic pricing using data analytics.</p>
 
-    <p>
-    This Dynamic Pricing System is designed to simulate modern retail pricing strategies.
-    It dynamically adjusts product prices in real-time based on factors such as demand,
-    stock availability, customer ratings, and seasonal trends.
-    </p>
-
-    <h3>🎯 Objective</h3>
-    <p>
-    The main objective of this project is to demonstrate how businesses can use data analytics
-    and automation to optimize pricing decisions and maximize profitability.
-    </p>
-
-    <h3>🛠️ Technologies Used</h3>
-    <ul>
-        <li>Python</li>
-        <li>Pandas</li>
-        <li>Matplotlib & Seaborn</li>
-        <li>Streamlit</li>
-    </ul>
-
-    <h3>📊 Key Features</h3>
-    <ul>
-        <li>Real-time data simulation</li>
-        <li>Dynamic price calculation</li>
-        <li>Interactive dashboard with multiple charts</li>
-        <li>Filtering and analytics tools</li>
-        <li>Recommendation system</li>
-        <li>Multi-user login system</li>
-    </ul>
-
-    <hr>
-
-    <h2>👨‍💻 About the Developer</h2>
-
-    <p>
-    <b>Name:</b> Jaskeerat Singh<br>
-    <b>Course:</b> Bachelor of Computer Applications (BCA)<br>
-    <b>University:</b> Graphic Era Deemed to be University
-    </p>
-
-    <p>
-    This project was developed as part of academic coursework to explore practical
-    applications of data analytics, dynamic pricing strategies, and interactive dashboards.
-    </p>
+    <h3>👨‍💻 Developer</h3>
+    <p>Jaskeerat Singh<br>BCA - Graphic Era University</p>
     """, unsafe_allow_html=True)
-
     st.markdown('</div>', unsafe_allow_html=True)
