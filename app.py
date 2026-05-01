@@ -55,6 +55,8 @@ if menu == "Login":
         pwd = st.text_input("Password", type="password")
 
         if st.button("Login"):
+            user = user.strip()
+            pwd = pwd.strip()
             if user in users and users[user] == pwd:
                 st.session_state.logged_in = True
                 st.session_state.username = user
@@ -71,7 +73,24 @@ elif menu == "Home":
     st.markdown("""
     <div style="background:rgba(0,0,0,0.6);padding:25px;border-radius:10px;">
     <h1>📊 Dynamic Pricing System</h1>
-    <p>A real-time pricing system that adjusts prices based on demand, stock, ratings, and season.</p>
+
+    <p style="font-size:18px;">
+    This system automatically adjusts product prices based on demand,
+    stock levels, customer ratings, and seasonal trends.
+    </p>
+
+    <h3>🚀 Features:</h3>
+    <ul>
+    <li>Real-time pricing updates</li>
+    <li>Interactive analytics dashboard</li>
+    <li>Profit analysis</li>
+    <li>Smart recommendations</li>
+    </ul>
+
+    <h3>🎯 Objective:</h3>
+    <p>
+    To simulate real-world pricing strategies used by companies like Amazon and Uber.
+    </p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -80,7 +99,7 @@ elif menu == "Dashboard":
     set_bg("https://images.unsplash.com/photo-1551288049-bebda4e38f71")
 
     if not st.session_state.logged_in:
-        st.warning("Login first")
+        st.warning("Please login first 🔐")
         st.stop()
 
     st.title("📊 Dashboard")
@@ -103,14 +122,17 @@ elif menu == "Dashboard":
     df = pd.read_csv(file) if file else load()
 
     # Real-time simulation
-    df['Demand'] += [random.randint(-5,5) for _ in range(len(df))]
-    df['Stock'] += [random.randint(-10,10) for _ in range(len(df))]
+    df['Demand'] = df['Demand'] + [random.randint(-5,5) for _ in range(len(df))]
+    df['Stock'] = df['Stock'] + [random.randint(-10,10) for _ in range(len(df))]
+    df['Last_Updated'] = datetime.datetime.now()
 
-    # Pricing
+    # Pricing logic
     def calc(r):
         price = r['Base_Price']
         if r['Demand'] > 80: price *= 1.2
-        if r['Stock'] < 50: price *= 1.1
+        elif r['Demand'] < 50: price *= 0.9
+        if r['Stock'] > 150: price *= 0.85
+        elif r['Stock'] < 50: price *= 1.15
         return round(price,2)
 
     df['Dynamic_Price'] = df.apply(calc, axis=1)
@@ -121,8 +143,10 @@ elif menu == "Dashboard":
     )
 
     # ---------- FILTERS ----------
-    search = st.sidebar.text_input("Search")
+    st.sidebar.header("Filters")
+    search = st.sidebar.text_input("Search Product")
     season = st.sidebar.selectbox("Season", ["All"] + list(df['Season'].unique()))
+    top_n = st.sidebar.slider("Top N Products", 5, 50, 10)
 
     if search:
         df = df[df['Product_Name'].str.contains(search, case=False)]
@@ -142,22 +166,25 @@ elif menu == "Dashboard":
     # ---------- CHARTS ----------
     colA, colB = st.columns(2)
 
+    # Top N Bar
     with colA:
+        top_products = df.sort_values(by="Dynamic_Price", ascending=False).head(top_n)
         fig, ax = plt.subplots()
-        ax.bar(df['Product_Name'], df['Dynamic_Price'])
+        ax.bar(top_products['Product_Name'], top_products['Dynamic_Price'])
         plt.xticks(rotation=45)
         st.pyplot(fig)
 
+    # Pie
     with colB:
         fig, ax = plt.subplots()
-        ax.pie(df['Season'].value_counts(), labels=df['Season'].unique(), autopct='%1.1f%%')
+        ax.pie(df['Season'].value_counts(), labels=df['Season'].value_counts().index, autopct='%1.1f%%')
         st.pyplot(fig)
 
     colC, colD = st.columns(2)
 
     with colC:
         fig, ax = plt.subplots()
-        ax.hist(df['Dynamic_Price'])
+        ax.hist(df['Dynamic_Price'], bins=20)
         st.pyplot(fig)
 
     with colD:
@@ -177,7 +204,7 @@ elif menu == "Dashboard":
         sns.heatmap(df[['Base_Price','Demand','Stock','Dynamic_Price']].corr(), annot=True)
         st.pyplot(fig)
 
-    # ---------- RECOMMENDATION ----------
+    # ---------- RECOMMENDATIONS ----------
     st.subheader("📌 Recommendations")
     st.dataframe(df[['Product_Name','Dynamic_Price','Recommendation']])
 
@@ -187,7 +214,30 @@ elif menu == "About":
 
     st.markdown("""
     <div style="background:rgba(0,0,0,0.6);padding:20px;border-radius:10px;">
-    <h1>About</h1>
-    <p>Dynamic pricing system with real-time analytics.</p>
+    <h1>ℹ️ About This Project</h1>
+
+    <p>
+    This Dynamic Pricing System is developed to simulate modern retail pricing strategies.
+    </p>
+
+    <h3>🛠️ Technologies Used:</h3>
+    <ul>
+    <li>Python</li>
+    <li>Pandas</li>
+    <li>Matplotlib & Seaborn</li>
+    <li>Streamlit</li>
+    </ul>
+
+    <h3>📊 Key Functionalities:</h3>
+    <ul>
+    <li>Dynamic price calculation</li>
+    <li>Real-time data simulation</li>
+    <li>Interactive dashboard</li>
+    <li>Recommendation system</li>
+    </ul>
+
+    <p>
+    This project demonstrates how businesses can use data analytics to optimize pricing decisions.
+    </p>
     </div>
     """, unsafe_allow_html=True)
