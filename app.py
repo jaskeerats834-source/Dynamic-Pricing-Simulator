@@ -224,6 +224,26 @@ elif menu == "Dashboard":
         ax.hist(df['Dynamic_Price'])
         st.pyplot(fig)
 
+colE, colF = st.columns(2)
+
+# Trend Chart (Rolling Average)
+with colE:
+    fig, ax = plt.subplots()
+    ax.plot(df['Dynamic_Price'].rolling(10).mean())
+    ax.set_title("Price Trend")
+    st.pyplot(fig)
+
+# Heatmap (Correlation)
+with colF:
+    fig, ax = plt.subplots()
+    sns.heatmap(
+        df[['Base_Price','Demand','Stock','Dynamic_Price']].corr(),
+        annot=True,
+        cmap="coolwarm",
+        ax=ax
+    )
+    ax.set_title("Correlation Heatmap")
+    st.pyplot(fig)
     with colD:
         fig, ax = plt.subplots()
         ax.scatter(df['Demand'], df['Dynamic_Price'])
