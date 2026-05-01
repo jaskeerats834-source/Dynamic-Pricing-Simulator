@@ -9,25 +9,22 @@ from streamlit_autorefresh import st_autorefresh
 # ------------------ PAGE CONFIG ------------------
 st.set_page_config(page_title="Dynamic Pricing System", layout="wide")
 
-# ------------------ GLOBAL STYLE ------------------
-st.markdown("""
-<style>
-.stApp {
-    background-image: url("https://images.unsplash.com/photo-1551288049-bebda4e38f71");
-    background-size: cover;
-    background-attachment: fixed;
-}
-[data-testid="stSidebar"] {
-    background-color: rgba(0,0,0,0.85);
-}
-[data-testid="stMetric"] {
-    background-color: rgba(30,41,59,0.8);
-    padding: 15px;
-    border-radius: 10px;
-    text-align: center;
-}
-</style>
-""", unsafe_allow_html=True)
+# ------------------ BACKGROUND FUNCTION ------------------
+def set_bg(image_url):
+    st.markdown(f"""
+    <style>
+    .stApp {{
+        background: linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.75)),
+                    url("{image_url}");
+        background-size: cover;
+        background-attachment: fixed;
+    }}
+
+    h1, h2, h3, h4, h5, h6, p, label, div {{
+        color: white !important;
+    }}
+    </style>
+    """, unsafe_allow_html=True)
 
 # ------------------ USER DATABASE ------------------
 users = {
@@ -52,11 +49,16 @@ menu = st.sidebar.radio("Navigation", ["Login", "Home", "Dashboard", "About"])
 
 # ------------------ LOGIN PAGE ------------------
 if menu == "Login":
-    st.markdown("<h1 style='text-align:center; color:white;'>🔐 Welcome Back</h1>", unsafe_allow_html=True)
+    set_bg("https://images.unsplash.com/photo-1521791136064-7986c2920216")
+
+    st.markdown("<h1 style='text-align:center;'>🔐 Welcome Back</h1>", unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
-        st.markdown("### Login to continue")
+        st.markdown("""
+        <div style="background: rgba(0,0,0,0.6); padding:20px; border-radius:10px;">
+        """, unsafe_allow_html=True)
+
         username = st.text_input("Username")
         password = st.text_input("Password", type="password")
 
@@ -68,31 +70,37 @@ if menu == "Login":
             else:
                 st.error("Invalid credentials ❌")
 
+        st.markdown("</div>", unsafe_allow_html=True)
+
 # ------------------ HOME PAGE ------------------
 elif menu == "Home":
+    set_bg("https://images.unsplash.com/photo-1556740749-887f6717d7e4")
+
+    st.markdown("<h1>📊 Dynamic Pricing System</h1>", unsafe_allow_html=True)
+
     st.markdown("""
-    <h1 style='color:white;'>📊 Dynamic Pricing System</h1>
-    <p style='color:white; font-size:18px;'>
+    <div style="background: rgba(0,0,0,0.6); padding:20px; border-radius:10px;">
+    <p style="font-size:18px;">
     A real-time retail pricing system that adjusts product prices based on demand,
     stock levels, ratings, and seasonal trends.
     </p>
+
+    <h3>🚀 Features:</h3>
+    <ul>
+    <li>Real-time pricing updates</li>
+    <li>Interactive analytics dashboard</li>
+    <li>Profit insights</li>
+    <li>Smart recommendations</li>
+    </ul>
+
+    <h3>🎯 Objective:</h3>
+    <p>To simulate real-world pricing strategies used by e-commerce platforms.</p>
+    </div>
     """, unsafe_allow_html=True)
-
-    st.image("https://images.unsplash.com/photo-1556740749-887f6717d7e4", use_container_width=True)
-
-    st.markdown("""
-    ### 🚀 Key Features:
-    - Real-time pricing updates  
-    - Interactive analytics dashboard  
-    - Profit insights  
-    - Smart recommendations  
-
-    ### 🎯 Objective:
-    To simulate real-world dynamic pricing strategies used in e-commerce platforms.
-    """)
 
 # ------------------ DASHBOARD ------------------
 elif menu == "Dashboard":
+    set_bg("https://images.unsplash.com/photo-1551288049-bebda4e38f71")
 
     if not st.session_state.logged_in:
         st.warning("Please login first 🔐")
@@ -119,12 +127,10 @@ elif menu == "Dashboard":
 
     df = pd.read_csv(file) if file else load_default()
 
-    # Real-time simulation
     df['Demand'] = df['Demand'].apply(lambda x: max(0, x + random.randint(-5, 5)))
     df['Stock'] = df['Stock'].apply(lambda x: max(0, x + random.randint(-10, 10)))
     df['Last_Updated'] = datetime.datetime.now()
 
-    # Pricing logic
     def calc(row):
         price = row['Base_Price']
         if row['Demand'] > 80: price *= 1.2
@@ -149,62 +155,49 @@ elif menu == "Dashboard":
 
     df['Recommendation'] = df.apply(recommend, axis=1)
 
-    # Filters
-    search = st.sidebar.text_input("Search Product")
-    top_n = st.sidebar.slider("Top N", 5, 50, 10)
-    season = st.sidebar.selectbox("Season", ["All"] + list(df['Season'].unique()))
+    st.markdown('<div style="background: rgba(0,0,0,0.6); padding:15px; border-radius:10px;">', unsafe_allow_html=True)
 
-    filtered = df.copy()
-
-    if search:
-        filtered = filtered[filtered['Product_Name'].str.contains(search, case=False)]
-
-    if season != "All":
-        filtered = filtered[filtered['Season'] == season]
-
-    # KPIs
     st.subheader("📊 Key Metrics")
-
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Products", len(filtered))
-    c2.metric("Avg Base", f"₹{filtered['Base_Price'].mean():.0f}")
-    c3.metric("Avg Dynamic", f"₹{filtered['Dynamic_Price'].mean():.0f}")
-    c4.metric("Avg Profit", f"₹{filtered['Profit'].mean():.0f}")
-
-    st.caption(f"Last Updated: {df['Last_Updated'].iloc[0]}")
+    c1.metric("Products", len(df))
+    c2.metric("Avg Base", f"₹{df['Base_Price'].mean():.0f}")
+    c3.metric("Avg Dynamic", f"₹{df['Dynamic_Price'].mean():.0f}")
+    c4.metric("Avg Profit", f"₹{df['Profit'].mean():.0f}")
 
     st.markdown("---")
 
-    # Charts
     colA, colB = st.columns(2)
 
     with colA:
-        top = filtered.sort_values(by="Dynamic_Price", ascending=False).head(top_n)
         fig, ax = plt.subplots()
-        ax.bar(top['Product_Name'], top['Dynamic_Price'])
-        ax.tick_params(axis='x', rotation=45)
+        ax.hist(df['Dynamic_Price'], bins=20)
         st.pyplot(fig)
 
     with colB:
         fig, ax = plt.subplots()
-        ax.hist(filtered['Dynamic_Price'], bins=20)
+        ax.scatter(df['Demand'], df['Dynamic_Price'])
         st.pyplot(fig)
 
-    st.markdown("---")
-
-    st.subheader("📌 Recommendations")
-    st.dataframe(filtered[['Product_Name','Dynamic_Price','Recommendation']])
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # ------------------ ABOUT ------------------
 elif menu == "About":
-    st.title("ℹ️ About Project")
+    set_bg("https://images.unsplash.com/photo-1498050108023-c5249f4df085")
 
-    st.write("""
-    Dynamic Pricing System built using Python & Streamlit.
+    st.markdown("""
+    <div style="background: rgba(0,0,0,0.6); padding:20px; border-radius:10px;">
+    <h1>ℹ️ About Project</h1>
 
-    Features:
-    - Multi-user login system
-    - Real-time pricing simulation
-    - Interactive analytics dashboard
-    - Recommendation system
-    """)
+    <p>This Dynamic Pricing System simulates real-world retail pricing strategies.</p>
+
+    <h3>Technologies:</h3>
+    <ul>
+    <li>Python</li>
+    <li>Pandas</li>
+    <li>Matplotlib & Seaborn</li>
+    <li>Streamlit</li>
+    </ul>
+
+    <p>Includes real-time simulation, analytics, and recommendations.</p>
+    </div>
+    """, unsafe_allow_html=True)
