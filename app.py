@@ -9,26 +9,37 @@ from streamlit_autorefresh import st_autorefresh
 # ------------------ PAGE CONFIG ------------------
 st.set_page_config(page_title="Dynamic Pricing System", layout="wide")
 
+# ------------------ USER DATABASE ------------------
+users = {
+    "admin": {"password": "admin123", "role": "admin"},
+    "user1": {"password": "user123", "role": "user"},
+    "guest": {"password": "guest123", "role": "guest"}
+}
+
 # ------------------ SESSION STATE ------------------
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
-# ------------------ SIDEBAR NAVIGATION ------------------
+if "username" not in st.session_state:
+    st.session_state.username = ""
+
+# ------------------ NAVIGATION ------------------
 menu = st.sidebar.radio("Navigation", ["Login", "Home", "Dashboard", "About"])
 
 # ------------------ LOGIN PAGE ------------------
 if menu == "Login":
-    st.title("🔐 Login Page")
+    st.title("🔐 Secure Login")
 
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
 
     if st.button("Login"):
-        if username == "admin" and password == "1234":
+        if username in users and users[username]["password"] == password:
             st.session_state.logged_in = True
-            st.success("Login Successful ✅")
+            st.session_state.username = username
+            st.success(f"Welcome {username} ✅")
         else:
-            st.error("Invalid Credentials ❌")
+            st.error("Invalid credentials ❌")
 
 # ------------------ HOME PAGE ------------------
 elif menu == "Home":
@@ -41,11 +52,11 @@ elif menu == "Home":
     - Ratings ⭐  
     - Season 🌦️  
 
-    🔥 Features:
-    - Real-time simulation
-    - Data analytics dashboard
-    - Profit calculation
-    - Smart recommendations
+    Features:
+    - Real-time pricing updates
+    - Analytics dashboard
+    - Profit insights
+    - Recommendations
     """)
 
 # ------------------ DASHBOARD ------------------
@@ -56,6 +67,16 @@ elif menu == "Dashboard":
         st.stop()
 
     st.title("📊 Dynamic Pricing Dashboard")
+
+    # Logout button
+    col1, col2 = st.columns([8,1])
+    with col2:
+        if st.button("Logout"):
+            st.session_state.logged_in = False
+            st.session_state.username = ""
+            st.rerun()
+
+    st.caption(f"Logged in as: {st.session_state.username}")
 
     # AUTO REFRESH
     st_autorefresh(interval=5000, limit=None, key="refresh")
@@ -211,7 +232,7 @@ elif menu == "Dashboard":
     st.subheader("Dataset")
     st.dataframe(filtered)
 
-# ------------------ ABOUT PAGE ------------------
+# ------------------ ABOUT ------------------
 elif menu == "About":
     st.title("ℹ️ About Project")
 
@@ -220,11 +241,9 @@ elif menu == "About":
 
     It simulates real-world pricing strategies used in e-commerce platforms.
 
-    Technologies Used:
-    - Python
-    - Pandas
-    - Matplotlib & Seaborn
-    - Streamlit
-
-    Developed for academic project purposes.
+    Features include:
+    - Multi-user login system
+    - Real-time pricing simulation
+    - Analytics dashboard
+    - Recommendation system
     """)
