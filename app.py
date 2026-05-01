@@ -201,41 +201,49 @@ elif menu == "Dashboard":
     st.markdown('</div>', unsafe_allow_html=True)
 
     # Charts
-    st.markdown('<div class="card">', unsafe_allow_html=True)
+   # Charts
+st.markdown('<div class="card">', unsafe_allow_html=True)
 
-    colA, colB = st.columns(2)
+colA, colB = st.columns(2)
 
-    with colA:
-        top_products = df.sort_values(by="Dynamic_Price", ascending=False).head(top_n)
-        fig, ax = plt.subplots()
-        ax.bar(top_products['Product_Name'], top_products['Dynamic_Price'])
-        plt.xticks(rotation=45)
-        st.pyplot(fig)
+with colA:
+    top_products = df.sort_values(by="Dynamic_Price", ascending=False).head(top_n)
+    fig1, ax = plt.subplots()
+    ax.bar(top_products['Product_Name'], top_products['Dynamic_Price'])
+    plt.xticks(rotation=45)
+    st.pyplot(fig1)
 
-    with colB:
-        fig, ax = plt.subplots()
-        ax.pie(df['Season'].value_counts(), labels=df['Season'].value_counts().index, autopct='%1.1f%%')
-        st.pyplot(fig)
+with colB:
+    fig2, ax = plt.subplots()
+    ax.pie(df['Season'].value_counts(), 
+           labels=df['Season'].value_counts().index, 
+           autopct='%1.1f%%')
+    st.pyplot(fig2)
 
-    colC, colD = st.columns(2)
+colC, colD = st.columns(2)
 
-    with colC:
-        fig, ax = plt.subplots()
-        ax.hist(df['Dynamic_Price'])
-        st.pyplot(fig)
+with colC:
+    fig3, ax = plt.subplots()
+    ax.hist(df['Dynamic_Price'], bins=20)
+    st.pyplot(fig3)
+
+with colD:
+    fig4, ax = plt.subplots()
+    ax.scatter(df['Demand'], df['Dynamic_Price'])
+    st.pyplot(fig4)
 
 colE, colF = st.columns(2)
 
-# Trend Chart (Rolling Average)
+# Trend Chart
 with colE:
-    fig, ax = plt.subplots()
+    fig5, ax = plt.subplots()
     ax.plot(df['Dynamic_Price'].rolling(10).mean())
     ax.set_title("Price Trend")
-    st.pyplot(fig)
+    st.pyplot(fig5)
 
-# Heatmap (Correlation)
+# Heatmap
 with colF:
-    fig, ax = plt.subplots()
+    fig6, ax = plt.subplots()
     sns.heatmap(
         df[['Base_Price','Demand','Stock','Dynamic_Price']].corr(),
         annot=True,
@@ -243,13 +251,9 @@ with colF:
         ax=ax
     )
     ax.set_title("Correlation Heatmap")
-    st.pyplot(fig)
-    with colD:
-        fig, ax = plt.subplots()
-        ax.scatter(df['Demand'], df['Dynamic_Price'])
-        st.pyplot(fig)
+    st.pyplot(fig6)
 
-    st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
     # Recommendations
     st.markdown('<div class="card">', unsafe_allow_html=True)
