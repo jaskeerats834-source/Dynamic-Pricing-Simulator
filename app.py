@@ -248,11 +248,54 @@ elif menu == "About":
     set_bg("https://images.unsplash.com/photo-1498050108023-c5249f4df085")
 
     st.markdown('<div class="card">', unsafe_allow_html=True)
+
     st.markdown("""
     <h1>ℹ️ About This Project</h1>
-    <p>This project demonstrates dynamic pricing using data analytics.</p>
 
-    <h3>👨‍💻 Developer</h3>
-    <p>Jaskeerat Singh<br>BCA - Graphic Era University</p>
+    <p>
+    This Dynamic Pricing System is designed to simulate modern retail pricing strategies.
+    It dynamically adjusts product prices in real-time based on factors such as demand,
+    stock availability, customer ratings, and seasonal trends.
+    </p>
+
+    <h3>🎯 Objective</h3>
+    <p>
+    The main objective of this project is to demonstrate how businesses can use data analytics
+    and automation to optimize pricing decisions and maximize profitability.
+    </p>
+
+    <h3>🛠️ Technologies Used</h3>
+    <ul>
+        <li>Python</li>
+        <li>Pandas</li>
+        <li>Matplotlib & Seaborn</li>
+        <li>Streamlit</li>
+    </ul>
+
+    <h3>📊 Key Features</h3>
+    <ul>
+        <li>Real-time data simulation</li>
+        <li>Dynamic price calculation</li>
+        <li>Interactive dashboard with multiple charts</li>
+        <li>Filtering and analytics tools</li>
+        <li>Recommendation system</li>
+        <li>Multi-user login system</li>
+    </ul>
+
+    <hr>
+
+    <h2>👨‍💻 About the Developer</h2>
+
+    <p>
+    <b>Name:</b> Jaskeerat Singh<br>
+    <b>Course:</b> Bachelor of Computer Applications (BCA)<br>
+    <b>University:</b> Graphic Era Deemed to be University
+    </p>
+
+    <p>
+    This project was developed as part of academic coursework to explore practical
+    applications of data analytics, dynamic pricing strategies, and interactive dashboards.
+    </p>
     """, unsafe_allow_html=True)
+
     st.markdown('</div>', unsafe_allow_html=True)
