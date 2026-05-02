@@ -32,17 +32,22 @@ def set_bg(url):
         background-color: rgba(0,0,0,0.9);
     }}
 
-    .stButton>button {{
-        border-radius: 10px;
-        background: linear-gradient(90deg, #3b82f6, #06b6d4);
+    /* 🔥 Sidebar Button Styling */
+    [data-testid="stSidebar"] .stButton>button {{
+        width: 100%;
+        margin-bottom: 10px;
+        padding: 12px;
+        border-radius: 8px;
+        background: linear-gradient(90deg, #2563eb, #06b6d4);
+        font-weight: 600;
         color: white;
         border: none;
         transition: 0.3s;
     }}
 
-    .stButton>button:hover {{
-        transform: scale(1.08);
-        box-shadow: 0px 0px 15px rgba(59,130,246,0.8);
+    [data-testid="stSidebar"] .stButton>button:hover {{
+        transform: scale(1.05);
+        box-shadow: 0px 0px 12px rgba(37,99,235,0.7);
     }}
 
     .card {{
@@ -76,10 +81,27 @@ if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 if "username" not in st.session_state:
     st.session_state.username = ""
+if "menu" not in st.session_state:
+    st.session_state.menu = "Login"
 
-# ---------- SIDEBAR ----------
+# ---------- SIDEBAR (UPDATED) ----------
 st.sidebar.markdown("## 🚀 Dynamic Pricing System")
-menu = st.sidebar.radio("Navigation", ["Login", "Home", "Dashboard", "About"])
+
+menu = None
+
+if st.sidebar.button("🔐 Login"):
+    menu = "Login"
+if st.sidebar.button("🏠 Home"):
+    menu = "Home"
+if st.sidebar.button("📊 Dashboard"):
+    menu = "Dashboard"
+if st.sidebar.button("ℹ️ About"):
+    menu = "About"
+
+if menu:
+    st.session_state.menu = menu
+
+menu = st.session_state.menu
 
 # ---------- LOGIN ----------
 if menu == "Login":
@@ -200,23 +222,55 @@ elif menu == "Dashboard":
     c4.metric("Profit", int(df['Profit'].mean()))
     st.markdown('</div>', unsafe_allow_html=True)
 
-      # ---------- BEST PRODUCT ----------
+    # 🏆 BEST PRODUCT
     st.markdown('<div class="card">', unsafe_allow_html=True)
-
     st.subheader("🏆 Best Product")
 
-    best_product = df.loc[df['Dynamic_Price'].idxmax()]
-
-    col1, col2, col3, col4 = st.columns(4)
-
-    col1.metric("Product", best_product['Product_Name'])
-    col2.metric("Price", f"₹{best_product['Dynamic_Price']}")
-    col3.metric("Demand", int(best_product['Demand']))
-    col4.metric("Status", best_product['Recommendation'])
+    if not df.empty:
+        best_product = df.loc[df['Dynamic_Price'].idxmax()]
+        col1, col2, col3, col4 = st.columns(4)
+        col1.metric("Product", best_product['Product_Name'])
+        col2.metric("Price", f"₹{best_product['Dynamic_Price']}")
+        col3.metric("Demand", int(best_product['Demand']))
+        col4.metric("Status", best_product['Recommendation'])
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Charts
+    # 💰 PROFIT LEADERBOARD
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.subheader("💰 Top Profitable Products")
+
+    top_profit = df.sort_values(by="Profit", ascending=False).head(5)
+    st.table(top_profit[['Product_Name', 'Dynamic_Price', 'Profit']])
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # 🛍️ PRODUCT CARDS
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.subheader("🛍️ Product Showcase")
+
+    top_display = df.sort_values(by="Dynamic_Price", ascending=False).head(6)
+    cols = st.columns(3)
+
+    for i, (_, row) in enumerate(top_display.iterrows()):
+        with cols[i % 3]:
+            st.markdown(f"""
+            <div style="background: rgba(255,255,255,0.05);
+                        padding:15px;
+                        border-radius:10px;
+                        margin-bottom:15px;
+                        text-align:center;">
+                <h4>{row['Product_Name']}</h4>
+                <p>💰 ₹{row['Dynamic_Price']}</p>
+                <p>📦 Stock: {row['Stock']}</p>
+                <p>🔥 Demand: {row['Demand']}</p>
+                <p>📊 {row['Recommendation']}</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # 📊 CHARTS (FIXED DARK MODE)
     st.markdown('<div class="card">', unsafe_allow_html=True)
 
     colA, colB = st.columns(2)
@@ -225,12 +279,19 @@ elif menu == "Dashboard":
         top_products = df.sort_values(by="Dynamic_Price", ascending=False).head(top_n)
         fig, ax = plt.subplots()
         ax.bar(top_products['Product_Name'], top_products['Dynamic_Price'])
+        ax.set_facecolor('#111111')
+        fig.patch.set_facecolor('#111111')
+        ax.tick_params(colors='white')
         plt.xticks(rotation=45)
         st.pyplot(fig)
 
     with colB:
         fig, ax = plt.subplots()
-        ax.pie(df['Season'].value_counts(), labels=df['Season'].value_counts().index, autopct='%1.1f%%')
+        ax.pie(df['Season'].value_counts(),
+               labels=df['Season'].value_counts().index,
+               autopct='%1.1f%%')
+        ax.set_facecolor('#111111')
+        fig.patch.set_facecolor('#111111')
         st.pyplot(fig)
 
     colC, colD = st.columns(2)
@@ -238,22 +299,90 @@ elif menu == "Dashboard":
     with colC:
         fig, ax = plt.subplots()
         ax.hist(df['Dynamic_Price'])
+        ax.set_facecolor('#111111')
+        fig.patch.set_facecolor('#111111')
+        ax.tick_params(colors='white')
         st.pyplot(fig)
 
     with colD:
         fig, ax = plt.subplots()
         ax.scatter(df['Demand'], df['Dynamic_Price'])
+        ax.set_facecolor('#111111')
+        fig.patch.set_facecolor('#111111')
+        ax.tick_params(colors='white')
         st.pyplot(fig)
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Recommendations
+    # 📈 PROFIT TREND
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.subheader("📌 Recommendations")
-    st.dataframe(df[['Product_Name','Dynamic_Price','Recommendation']])
+    st.subheader("📈 Profit Trend")
+
+    if "profit_history" not in st.session_state:
+        st.session_state.profit_history = []
+
+    current_profit = df['Profit'].sum()
+    st.session_state.profit_history.append(current_profit)
+
+    fig, ax = plt.subplots()
+    ax.plot(st.session_state.profit_history)
+    ax.set_facecolor('#111111')
+    fig.patch.set_facecolor('#111111')
+    ax.tick_params(colors='white')
+
+    st.pyplot(fig)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # FULL TABLE
+    # 🎯 RECOMMENDATIONS (STYLED)
+       # 🎯 RECOMMENDATIONS (STYLED)
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.subheader("📌 Recommendations")
+
+    def get_badge(val):
+        if val == "Increase":
+            return f"<span style='color:#22c55e;font-weight:bold;'>▲ {val}</span>"
+        elif val == "Decrease":
+            return f"<span style='color:#ef4444;font-weight:bold;'>▼ {val}</span>"
+        else:
+            return f"<span style='color:#eab308;font-weight:bold;'>● {val}</span>"
+
+    # Base dataframe
+    rec_df = df[['Product_Name','Dynamic_Price','Recommendation']].copy()
+
+    # 🔍 SEARCH BAR
+    search_term = st.text_input("🔍 Search Product in Recommendations")
+
+    if search_term:
+        rec_df = rec_df[rec_df['Product_Name'].str.contains(search_term, case=False)]
+
+    # Apply badges AFTER filtering
+    rec_df['Recommendation'] = rec_df['Recommendation'].apply(get_badge)
+
+    # 📥 DOWNLOAD BUTTON
+    download_df = df[['Product_Name','Dynamic_Price','Recommendation']].copy()
+
+    st.download_button(
+        label="📥 Download Recommendations CSV",
+        data=download_df.to_csv(index=False),
+        file_name="recommendations.csv",
+        mime="text/csv"
+    )
+
+    # 📜 SCROLLABLE TABLE
+    table_html = rec_df.to_html(escape=False)
+
+    st.markdown(f"""
+    <div style="
+        max-height: 300px;
+        overflow-y: auto;
+        border-radius: 10px;
+    ">
+        {table_html}
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
+     # 📂 FULL DATASET
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.subheader("📂 Complete Dataset View")
     st.dataframe(df)
