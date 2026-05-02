@@ -200,6 +200,21 @@ elif menu == "Dashboard":
     c4.metric("Profit", int(df['Profit'].mean()))
     st.markdown('</div>', unsafe_allow_html=True)
 
+    # ---------- BEST PRODUCT ----------
+st.markdown('<div class="card">', unsafe_allow_html=True)
+
+st.subheader("🏆 Best Product")
+
+best_product = df.loc[df['Dynamic_Price'].idxmax()]
+
+col1, col2, col3, col4 = st.columns(4)
+
+col1.metric("Product", best_product['Product_Name'])
+col2.metric("Price", f"₹{best_product['Dynamic_Price']}")
+col3.metric("Demand", int(best_product['Demand']))
+col4.metric("Status", best_product['Recommendation'])
+st.markdown('</div>', unsafe_allow_html=True)
+
     # Charts
     st.markdown('<div class="card">', unsafe_allow_html=True)
 
